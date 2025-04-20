@@ -136,6 +136,10 @@ class ProgramNode extends ASTnode {
         myDeclList.nameAnalysis(symTab);
     }
 
+    public void typeCheck() {
+        myDeclList.typeCheck();
+    }
+
     public void unparse(PrintWriter p, int indent) {
         myDeclList.unparse(p, indent);
     }
@@ -173,6 +177,12 @@ class DeclListNode extends ASTnode {
         }
     }
 
+    public void typeCheck() {
+        for (DeclNode decl : myDecls) {
+            decl.typeCheck();
+        }
+    }
+
     public void unparse(PrintWriter p, int indent) {
         Iterator it = myDecls.iterator();
         try {
@@ -204,6 +214,12 @@ class StmtListNode extends ASTnode {
         }
     }
 
+    public void typeCheck(Type retType) {
+        for (StmtNode stmt : myStmts) {
+            stmt.typeCheck(retType);
+        }
+    }
+
     public void unparse(PrintWriter p, int indent) {
         Iterator<StmtNode> it = myStmts.iterator();
         while (it.hasNext()) {
@@ -220,6 +236,10 @@ class ExpListNode extends ASTnode {
         myExps = S;
     }
 
+    public int size(){
+        return myExps.size();
+    }
+
     /****
      * nameAnalysis
      * Given a symbol table symTab, process each exp in the list.
@@ -227,6 +247,27 @@ class ExpListNode extends ASTnode {
     public void nameAnalysis(SymTab symTab) {
         for (ExpNode node : myExps) {
             node.nameAnalysis(symTab);
+        }
+    }
+
+    public void typeCheck(List<Type> types){
+        int i = 0;
+        try{
+            for(ExpNode exp : myExps){
+                Type actualType = exp.typeCheck();
+                if(!actualType.isErrorType()){
+                    Type formalType = types.get(i);
+                    if(!actualType.equals(formalType)){
+                        ErrMsg.fatal(exp.lineNum(), exp.charNum(),
+                                    "Actual type and formal type do not match");
+                    }
+                }
+                i++; 
+            }
+        } catch(NoSuchElementException e){
+            System.err.println(
+                "Unexpected NoSuchElementException in ExpListNode.typeCheck");
+            System.exit(-1);
         }
     }
 
@@ -306,6 +347,10 @@ class FuncBodyNode extends ASTnode {
         myStmtList.nameAnalysis(symTab);
     }
 
+    public void typeCheck(Type retType) {
+        myStmtList.typeCheck(retType);
+    }
+
     public void unparse(PrintWriter p, int indent) {
         myDeclList.unparse(p, indent);
         myStmtList.unparse(p, indent);
@@ -326,6 +371,9 @@ abstract class DeclNode extends ASTnode {
      * Note: a formal decl needs to return a sym
      ****/
     abstract public Sym nameAnalysis(SymTab symTab);
+    public void typeCheck(){
+        // default for non-func decl
+    }
 }
 
 class VarDeclNode extends DeclNode {
@@ -513,6 +561,10 @@ class FuncDeclNode extends DeclNode {
         }
         
         return null;
+    }
+
+    public void typeCheck(){
+        myBody.typeCheck(myType.type());
     }
 
     public void unparse(PrintWriter p, int indent) {
@@ -886,7 +938,7 @@ class IfStmtNode extends StmtNode {
             ErrMsg.fatal(myExp.lineNum(), myExp.charNum(),
                         "Non-boolean expression in if condition");
         }
-        myStmtList.typeCheck();
+        myStmtList.typeCheck(retType);
     }
 
     public void unparse(PrintWriter p, int indent) {
@@ -958,8 +1010,8 @@ class IfElseStmtNode extends StmtNode {
             ErrMsg.fatal(myExp.lineNum(), myExp.charNum(),
                         "Non-boolean expression in if condition");
         }
-        myThenStmtList.typeCheck();
-        myElseStmtList.typeCheck();
+        myThenStmtList.typeCheck(retType);
+        myElseStmtList.typeCheck(retType);
     }
 
     public void unparse(PrintWriter p, int indent) {
@@ -1022,7 +1074,7 @@ class WhileStmtNode extends StmtNode {
             ErrMsg.fatal(myExp.lineNum(), myExp.charNum(),
                         "Non-boolean expression in while condition");
         }
-        myStmtList.typeCheck();
+        myStmtList.typeCheck(retType);
     }
 
     public void unparse(PrintWriter p, int indent) {
