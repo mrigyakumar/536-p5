@@ -759,6 +759,7 @@ class StructNode extends TypeNode {
 
 abstract class StmtNode extends ASTnode {
     abstract public void nameAnalysis(SymTab symTab);  
+    abstract public void typeCheck(Type retType);
 }
 
 class AssignStmtNode extends StmtNode {
@@ -772,6 +773,10 @@ class AssignStmtNode extends StmtNode {
      ****/
     public void nameAnalysis(SymTab symTab) {
         myAssign.nameAnalysis(symTab);
+    }
+
+    public void typeCheck(Type retType) {
+        myAssign.typeCheck();
     }
 
     public void unparse(PrintWriter p, int indent) {
@@ -797,6 +802,14 @@ class PostIncStmtNode extends StmtNode {
         myExp.nameAnalysis(symTab);
     }
 
+    public void typeCheck(Type retType) {
+        Type type = myExp.typeCheck();
+        if(!type.isErrorType() && !type.isIntegerType()) {
+            ErrMsg.fatal(myExp.lineNum(), myExp.charNum(),
+                        "Arithmetic operator with non-integer operand");
+        }
+    }
+
     public void unparse(PrintWriter p, int indent) {
         doIndent(p, indent);
         myExp.unparse(p, 0);
@@ -818,6 +831,14 @@ class PostDecStmtNode extends StmtNode {
      ****/
     public void nameAnalysis(SymTab symTab) {
         myExp.nameAnalysis(symTab);
+    }
+
+    public void typeCheck(Type retType) {
+        Type type = myExp.typeCheck();
+        if(!type.isErrorType() && !type.isIntegerType()) {
+            ErrMsg.fatal(myExp.lineNum(), myExp.charNum(),
+                        "Arithmetic operator with non-integer operand");
+        }
     }
 
     public void unparse(PrintWriter p, int indent) {
@@ -857,6 +878,15 @@ class IfStmtNode extends StmtNode {
                                " in IfStmtNode.nameAnalysis");
             System.exit(-1);        
         }
+    }
+
+    public void typeCheck(Type retType) {
+        Type type = myExp.typeCheck();
+        if(!type.isErrorType() && !type.isBooleanType()) {
+            ErrMsg.fatal(myExp.lineNum(), myExp.charNum(),
+                        "Non-boolean expression in if condition");
+        }
+        myStmtList.typeCheck();
     }
 
     public void unparse(PrintWriter p, int indent) {
@@ -922,6 +952,16 @@ class IfElseStmtNode extends StmtNode {
         }
     }
 
+    public void typeCheck(Type retType){
+        Type type = myExp.typeCheck();
+        if(!type.isErrorType() && !type.isBooleanType()) {
+            ErrMsg.fatal(myExp.lineNum(), myExp.charNum(),
+                        "Non-boolean expression in if condition");
+        }
+        myThenStmtList.typeCheck();
+        myElseStmtList.typeCheck();
+    }
+
     public void unparse(PrintWriter p, int indent) {
         doIndent(p, indent);
         p.print("if (");
@@ -976,6 +1016,15 @@ class WhileStmtNode extends StmtNode {
         }
     }
 
+    public void typeCheck(Type retType){
+        Type type = myExp.typeCheck();
+        if(!type.isErrorType() && !type.isBooleanType()) {
+            ErrMsg.fatal(myExp.lineNum(), myExp.charNum(),
+                        "Non-boolean expression in while condition");
+        }
+        myStmtList.typeCheck();
+    }
+
     public void unparse(PrintWriter p, int indent) {
         doIndent(p, indent);
         p.print("while (");
@@ -1006,6 +1055,26 @@ class ReadStmtNode extends StmtNode {
         myExp.nameAnalysis(symTab);
     } 
 
+    public void typeCheck(Type retType){
+        Type type = myExp.typeCheck();
+
+        if(type.isFuncType()){
+            ErrMsg.fatal(myExp.lineNum(), myExp.charNum(),
+                        "Attempt to read function name");
+        }
+
+        if(type.isStructDefType()){
+            ErrMsg.fatal(myExp.lineNum(), myExp.charNum(),
+                        "Attempt to read struct name");
+        }
+
+        if(type.isStructType()){
+            ErrMsg.fatal(myExp.lineNum(), myExp.charNum(),
+                        "Attempt to read struct variable");
+        }
+     
+    }
+
     public void unparse(PrintWriter p, int indent) {
         doIndent(p, indent);
         p.print("input -> ");
@@ -1028,6 +1097,30 @@ class WriteStmtNode extends StmtNode {
      ****/
     public void nameAnalysis(SymTab symTab) {
         myExp.nameAnalysis(symTab);
+    }
+
+    public void typeCheck(Type retType){
+        Type type = myExp.typeCheck();
+
+        if(type.isFuncType()){
+            ErrMsg.fatal(myExp.lineNum(), myExp.charNum(),
+                        "Attempt to write function name");
+        }
+
+        if(type.isStructDefType()){
+            ErrMsg.fatal(myExp.lineNum(), myExp.charNum(),
+                        "Attempt to write struct name");
+        }
+
+        if(type.isStructType()){
+            ErrMsg.fatal(myExp.lineNum(), myExp.charNum(),
+                        "Attempt to write struct variable");
+        }
+
+        if(type.isVoidType()){
+            ErrMsg.fatal(myExp.lineNum(), myExp.charNum(),
+                        "Attempt to write void");
+        }
     }
 
     public void unparse(PrintWriter p, int indent) {
@@ -1054,6 +1147,10 @@ class CallStmtNode extends StmtNode {
         myCall.nameAnalysis(symTab);
     }
 
+    public void typeCheck(Type retType){ 
+        myCall.typeCheck();
+    }
+
     public void unparse(PrintWriter p, int indent) {
         doIndent(p, indent);
         myCall.unparse(p, indent);
@@ -1077,6 +1174,30 @@ class ReturnStmtNode extends StmtNode {
     public void nameAnalysis(SymTab symTab) {
         if (myExp != null) {
             myExp.nameAnalysis(symTab);
+        }
+    }
+
+    public void typeCheck(Type retType){
+        if(myExp != null){
+            // return value given
+            Type type = myExp.typeCheck();
+
+            if(retType.isVoidType()){
+                ErrMsg.fatal(myExp.lineNum(), myExp.charNum(),
+                            "Return value in void function");
+            }
+
+            if(!retType.isErrorType() && !type.isErrorType() && !retType.equals(type)){
+                ErrMsg.fatal(myExp.lineNum(), myExp.charNum(),
+                            "Bad return value");
+            }
+        }
+        else{
+            // no return value given
+            if(!retType.isVoidType()){
+                ErrMsg.fatal(0,0,
+                            "Missing return value");
+            }
         }
     }
 
