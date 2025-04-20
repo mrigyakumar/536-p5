@@ -1238,8 +1238,9 @@ class IdNode extends ExpNode {
         }
         else{
             System.err.println("No sym associated with ID");
-            return null;
+            System.exit(-1);
         }
+        return null;
     }
 
     private int myLineNum;
@@ -1562,8 +1563,28 @@ class CallExpNode extends ExpNode {
     } 
 
     public Type typeCheck(){
-        // TODO 
-        return null;
+        if(!myId.typeCheck().isFuncType()){
+            ErrMsg.fatal(myId.lineNum(), myId.charNum(),
+            "Attempt to call non-function");
+            return new ErrorType();
+        }
+
+        // check for function call with wrong number of arguments
+        FuncSym sym = (FuncSym)myId.sym();
+        if(sym == null){
+            System.err.println("No sym associated with ID");
+            System.exit(-1);
+        }
+
+        if(myExpList.size() != sym.getNumParams()){
+            ErrMsg.fatal(myId.lineNum(),myId.charNum(),
+            "Wrong # of args in function call");
+            return new ErrorType();
+        }
+
+        // number of args correct, check formal vs actual type
+        myExpList.typeCheck(sym.getParamTypes());
+        return sym.getReturnType();
     }
 
     public void unparse(PrintWriter p, int indent) {
@@ -1692,9 +1713,150 @@ class UnaryMinusNode extends UnaryExpNode {
 // ****  Subclasses of BinaryExpNode
 // **********************************************************************
 
+// new class for arithmetic operators
+abstract class ArithmeticNode extends BinaryExpNode{
+    public ArithmeticNode(ExpNode exp1, ExpNode exp2){
+        super(exp1, exp2);
+    }
 
-// TODO: Add subclasses for logical, arithmetic and relational operators
-class AndNode extends BinaryExpNode {
+    public Type typeCheck(){
+        Type typeExp1 = myExp1.typeCheck();
+        Type typeExp2 = myExp2.typeCheck();
+        Type retType = new IntegerType();
+
+        if(!typeExp1.isErrorType() && !typeExp1.isIntegerType()){
+            ErrMsg.fatal(myExp1.lineNum(), myExp1.charNum(),
+            "Arithemetic operator with non-integer operand");
+            retType = new ErrorType();
+        }
+
+        if(!typeExp2.isErrorType() && !typeExp2.isIntegerType()){
+            ErrMsg.fatal(myExp2.lineNum(), myExp2.charNum(),
+            "Arithemetic operator with non-integer operand");
+            retType = new ErrorType();
+        }
+
+        if(typeExp1.isErrorType() || typeExp2.isErrorType()){
+            retType = new ErrorType();
+        }
+
+        return retType;
+    }
+}
+
+// new class for logical operators
+abstract class LogicalNode extends BinaryExpNode{
+    public LogicalNode(ExpNode exp1, ExpNode exp2){
+        super(exp1, exp2);
+    }
+
+    public Type typeCheck(){
+        Type typeExp1 = myExp1.typeCheck();
+        Type typeExp2 = myExp2.typeCheck();
+        Type retType = new BooleanType();
+
+        if(!typeExp1.isErrorType() && !typeExp1.isBooleanType()){
+            ErrMsg.fatal(myExp1.lineNum(), myExp1.charNum(),
+            "Logical operator with non-boolean operand");
+            retType = new ErrorType();
+        }
+
+        if(!typeExp2.isErrorType() && !typeExp2.isBooleanType()){
+            ErrMsg.fatal(myExp2.lineNum(), myExp2.charNum(),
+            "Logical operator with non-boolean operand");
+            retType = new ErrorType();
+        }
+
+        if(typeExp1.isErrorType() || typeExp2.isErrorType()){
+            retType = new ErrorType();
+        }
+
+        return retType;
+    }
+}
+
+// new class for Equality type checking
+abstract class EqualityNode extends BinaryExpNode{
+    public EqualityNode(ExpNode exp1, ExpNode exp2){
+        super(exp1, exp2);
+    }
+
+    public Type typeCheck(){
+        Type typeExp1 = myExp1.typeCheck();
+        Type typeExp2 = myExp2.typeCheck();
+        Type retType = new BooleanType();
+
+        if(typeExp1.isVoidType() && typeExp2.isVoidType()){
+            ErrMsg.fatal(myExp1.lineNum(), myExp1.charNum(),
+            "Equality operator applied to void function calls");
+            retType = new ErrorType();
+        }
+
+        if(typeExp1.isFuncType() && typeExp2.isFuncType()){
+            ErrMsg.fatal(myExp1.lineNum(), myExp1.charNum(),
+            "Equality operator applied to function names");
+            retType = new ErrorType();
+        }
+
+        if(typeExp1.isStructDefType() && typeExp2.isStructDefType()){
+            ErrMsg.fatal(myExp1.lineNum(), myExp1.charNum(),
+            "Equality operator applied to struct names");
+            retType = new ErrorType();
+        }
+
+        if(typeExp1.isStructType() && typeExp2.isStructType()){
+            ErrMsg.fatal(myExp1.lineNum(), myExp1.charNum(),
+            "Equality operator applied to struct variables");
+            retType = new ErrorType();
+        }
+
+        if(!typeExp1.equals(typeExp2) && !typeExp1.isErrorType() && 
+        !typeExp2.isErrorType()){
+            ErrMsg.fatal(myExp1.lineNum(), myExp1.charNum(),
+            "Type mismatch");
+            retType = new ErrorType();
+        }
+
+        if (typeExp1.isErrorType() || typeExp2.isErrorType()){
+            retType = new ErrorType();
+        }
+
+        return retType;
+    }
+}
+
+// new class for Relational operators
+abstract class RelationalNode extends BinaryExpNode{
+    public RelationalNode(ExpNode exp1, ExpNode exp2){
+        super(exp1, exp2);
+    }
+
+    public Type typeCheck(){
+        Type typeExp1 = myExp1.typeCheck();
+        Type typeExp2 = myExp2.typeCheck();
+        Type retType = new BooleanType();
+
+        if(!typeExp1.isErrorType() && !typeExp1.isIntegerType()){
+            ErrMsg.fatal(myExp1.lineNum(), myExp1.charNum(),
+            "Relational operator with non-integer operand");
+            retType = new ErrorType();
+        }
+
+        if(!typeExp2.isErrorType() && !typeExp2.isIntegerType()){
+            ErrMsg.fatal(myExp2.lineNum(), myExp2.charNum(),
+            "Relational operator with non-integer operand");
+            retType = new ErrorType();
+        }
+
+        if(typeExp1.isErrorType() || typeExp2.isErrorType()){
+            retType = new ErrorType();
+        }
+
+        return retType;
+    }
+}
+
+class AndNode extends LogicalNode {
     public AndNode(ExpNode exp1, ExpNode exp2) {
         super(exp1, exp2);
     }
@@ -1708,7 +1870,7 @@ class AndNode extends BinaryExpNode {
     }
 }
 
-class OrNode extends BinaryExpNode {
+class OrNode extends LogicalNode {
     public OrNode(ExpNode exp1, ExpNode exp2) {
         super(exp1, exp2);
     }
@@ -1722,7 +1884,7 @@ class OrNode extends BinaryExpNode {
     }
 }
 
-class PlusNode extends BinaryExpNode {
+class PlusNode extends ArithmeticNode {
     public PlusNode(ExpNode exp1, ExpNode exp2) {
         super(exp1, exp2);
     }
@@ -1736,7 +1898,7 @@ class PlusNode extends BinaryExpNode {
     }
 }
 
-class MinusNode extends BinaryExpNode {
+class MinusNode extends ArithmeticNode {
     public MinusNode(ExpNode exp1, ExpNode exp2) {
         super(exp1, exp2);
     }
@@ -1750,7 +1912,7 @@ class MinusNode extends BinaryExpNode {
     }
 }
 
-class TimesNode extends BinaryExpNode {
+class TimesNode extends ArithmeticNode {
     public TimesNode(ExpNode exp1, ExpNode exp2) {
         super(exp1, exp2);
     }
@@ -1764,7 +1926,7 @@ class TimesNode extends BinaryExpNode {
     }
 }
 
-class DivideNode extends BinaryExpNode {
+class DivideNode extends ArithmeticNode {
     public DivideNode(ExpNode exp1, ExpNode exp2) {
         super(exp1, exp2);
     }
@@ -1778,7 +1940,7 @@ class DivideNode extends BinaryExpNode {
     }
 }
 
-class EqualsNode extends BinaryExpNode {
+class EqualsNode extends EqualityNode {
     public EqualsNode(ExpNode exp1, ExpNode exp2) {
         super(exp1, exp2);
     }
@@ -1792,7 +1954,7 @@ class EqualsNode extends BinaryExpNode {
     }
 }
 
-class NotEqNode extends BinaryExpNode {
+class NotEqNode extends EqualityNode {
     public NotEqNode(ExpNode exp1, ExpNode exp2) {
         super(exp1, exp2);
     }
@@ -1806,7 +1968,7 @@ class NotEqNode extends BinaryExpNode {
     }
 }
 
-class GreaterNode extends BinaryExpNode {
+class GreaterNode extends RelationalNode {
     public GreaterNode(ExpNode exp1, ExpNode exp2) {
         super(exp1, exp2);
     }
@@ -1820,7 +1982,7 @@ class GreaterNode extends BinaryExpNode {
     }
 }
 
-class GreaterEqNode extends BinaryExpNode {
+class GreaterEqNode extends RelationalNode {
     public GreaterEqNode(ExpNode exp1, ExpNode exp2) {
         super(exp1, exp2);
     }
@@ -1834,7 +1996,7 @@ class GreaterEqNode extends BinaryExpNode {
     }
 }
 
-class LessNode extends BinaryExpNode {
+class LessNode extends RelationalNode {
     public LessNode(ExpNode exp1, ExpNode exp2) {
         super(exp1, exp2);
     }
@@ -1848,7 +2010,7 @@ class LessNode extends BinaryExpNode {
     }
 }
 
-class LessEqNode extends BinaryExpNode {
+class LessEqNode extends RelationalNode {
     public LessEqNode(ExpNode exp1, ExpNode exp2) {
         super(exp1, exp2);
     }
