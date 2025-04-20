@@ -1,0 +1,105 @@
+boolean bool.
+integer int.
+struct S1 [
+    integer field1.
+    boolean bField.
+]
+
+struct S2 [
+    struct S1 field2.
+]
+
+struct S3 [
+    struct S2 field3.
+]
+
+struct intStruct [
+    integer int1.
+    integer int2.
+    integer int3.
+]
+
+boolean boolFunc[integer a, integer b, boolean var] [
+    input -> bool{boolean}.
+    while ((a{integer} > b{integer})) {
+        if ((bool{boolean} & (^var{boolean}))) {
+            a{integer}--.
+        }
+        else {
+            if (((^bool{boolean}) & var{boolean})) {
+                a{integer}++.
+            }
+            else {
+                if ((bool{boolean} | var{boolean})) {
+                    b{integer}--.
+                }
+            }
+        }
+    }
+    if ((b{integer} ^= 0)) {
+        return TRUE.
+    }
+    else {
+        return FALSE.
+    }
+]
+
+void performRelational[integer a, integer b, integer c] [
+    if ((a{integer} == b{integer})) {
+        disp <- ("EQUAL!").
+    }
+    if (((b{integer} >= c{integer}) & (c{integer} <= a{integer}))) {
+        disp <- (c{integer}).
+    }
+    if (((c{integer} < a{integer}) & (a{integer} ^= b{integer}))) {
+        disp <- (TRUE).
+    }
+    if ((b{integer} > a{integer})) {
+        boolean bool.
+        bool{boolean} = boolFunc{integer,integer,boolean->boolean}(a{integer}, b{integer}, FALSE).
+        disp <- (bool{boolean}).
+    }
+]
+
+integer doMath[integer x] [
+    integer a.
+    integer b.
+    boolean c.
+    struct intStruct str.
+    a{integer} = 5.
+    b{integer} = (x{integer} + a{integer}).
+    input -> c{boolean}.
+    if (c{boolean}) {
+        b{integer}--.
+    }
+    else {
+        b{integer}++.
+    }
+    (str{intStruct}):int1{integer} = (a{integer} * (-b{integer})).
+    (str{intStruct}):int2{integer} = ((str{intStruct}):int1{integer} / x{integer}).
+    (str{intStruct}):int3{integer} = ((str{intStruct}):int1{integer} - (str{intStruct}):int2{integer}).
+    performRelational{integer,integer,integer->void}((str{intStruct}):int1{integer}, (str{intStruct}):int2{integer}, (str{intStruct}):int3{integer}).
+    return b{integer}.
+]
+
+void setVars[] [
+    struct S1 x1.
+    struct S2 x2.
+    struct S3 x3.
+    integer y.
+    bool{boolean} = TRUE.
+    (x1{S1}):field1{integer} = 7.
+    (x1{S1}):bField{boolean} = bool{boolean}.
+    ((x2{S2}):field2{S1}):field1{integer} = (((x1{S1}):field1{integer} - 5) * 10).
+    ((x2{S2}):field2{S1}):bField{boolean} = (^(x1{S1}):bField{boolean}).
+    (((x3{S3}):field3{S2}):field2{S1}):bField{boolean} = ((x2{S2}):field2{S1}):bField{boolean}.
+    (((x3{S3}):field3{S2}):field2{S1}):field1{integer} = 8.
+    y{integer} = ((((x3{S3}):field3{S2}):field2{S1}):field1{integer} * 10).
+    int{integer} = doMath{integer->integer}(y{integer}).
+    return.
+]
+
+void main[] [
+    setVars{->void}().
+]
+

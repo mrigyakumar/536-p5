@@ -1666,14 +1666,14 @@ class AssignExpNode extends ExpNode {
         }
 
         // check for assignment to struct name
-        if(lhsType.isStructType() && expType.isStructType()){
+        if(lhsType.isStructDefType() && expType.isStructDefType()){
             ErrMsg.fatal(myLhs.lineNum(), myLhs.charNum(),
             "Assignment to struct name");
             returnType = new ErrorType();   
         }
 
         // check for assignment to struct variable
-        if(lhsType.isStructDefType() && expType.isStructDefType()){
+        if(lhsType.isStructType() && expType.isStructType()){
             ErrMsg.fatal(myLhs.lineNum(), myLhs.charNum(),
             "Assignment to struct variable");
             returnType = new ErrorType();

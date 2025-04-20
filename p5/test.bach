@@ -1,0 +1,107 @@
+boolean bool.
+integer int.
+struct S1[
+  integer field1.
+  boolean bField.
+]
+struct S2[
+  struct S1 field2.
+]
+struct S3[
+  struct S2 field3.
+]
+
+struct intStruct[
+    integer int1.
+    integer int2.
+    integer int3.
+]
+
+boolean boolFunc[integer a, integer b, boolean var][
+    input -> bool.
+    while(a > b){
+        if(bool & ^var){
+            a--.
+        }
+        else{
+            if(^bool & var){
+                a++.
+            }
+            else{
+                if(bool | var){
+                    b--.
+                }
+            }
+        }
+    }
+    if(b ^= 0){
+        return TRUE.
+    }
+    else{
+        return FALSE.
+    }
+]
+
+void performRelational[integer a, integer b, integer c][
+    if(a == b){
+        disp <- "EQUAL!".
+    }
+    if(b >= c & c <= a){
+        disp <- c.
+    }
+    if(c<a & a^=b){
+        disp <- TRUE.
+    }
+    if(b>a){
+        boolean bool.
+        bool = boolFunc(a,b, FALSE).
+        disp <- bool.
+    }
+]
+
+integer doMath[integer x][
+    integer a.
+    integer b.
+    boolean c.
+    struct intStruct str.
+    a = 5.
+    b = x + a.
+    input -> c.
+    if(c){
+        b--.
+    }
+    else{
+        b++.
+    }
+
+    str : int1 = a * -b.
+    str : int2 = str : int1 / x.
+    str : int3 = str:int1 - str:int2.
+    performRelational(str:int1, str:int2, str:int3).
+    return b.
+]
+
+void setVars[][
+  struct S1 x1.
+  struct S2 x2.
+  struct S3 x3.
+  integer y.
+
+  bool = TRUE.
+
+  x1 : field1 = 7.
+  x1 : bField = bool.
+  x2 : field2 : field1 = (x1 : field1 - 5) * 10.
+  x2 : field2 : bField = ^x1:bField.
+  x3 : field3 : field2 : bField = x2 : field2 : bField.
+  x3 : field3 : field2 : field1 = 8.
+  y = x3 : field3 : field2 : field1 * 10.
+
+  int = doMath(y).
+  
+  return.
+]
+
+void main[][
+    setVars().
+]
