@@ -1,1 +1,180 @@
-#TODO
+struct sampleStruct[
+    integer var1.
+    boolean var2.
+]
+
+boolean bbb.
+struct R [ integer a. ]
+struct R q.
+
+integer num.
+
+void sampleVoidFunc[][
+    return.
+]
+
+integer sampleFunc[integer param1, boolean param2] [
+    if(param2){
+        return ^param2. # bad return value type
+    }
+]
+
+void writeErrors[] [
+    struct sampleStruct s.
+    disp <- sampleVoidFunc.
+    disp <- sampleStruct.
+    disp <- s.
+    disp <- sampleVoidFunc().
+]
+
+void readErrors[] [ 
+    struct sampleStruct s.
+    input -> writeErrors.
+    input -> sampleStruct.
+    input -> s.
+
+    return TRUE. # return value in void func
+]
+
+boolean funcCallErrors[][
+    integer i.
+    i = 10.
+    # call non-function
+    sampleStruct().
+    num(7).
+
+    # wrong number of args
+    readErrors(i).
+    sampleFunc(i, TRUE).
+    sampleFunc(i, TRUE, i+1).
+
+    # actual and formal don't match
+    sampleFunc(TRUE, i).
+    sampleFunc(i, i+1).
+    sampleFunc(TRUE,FALSE).
+
+    return. # missing return value
+]
+
+void badMath[integer x, integer y][
+    boolean bool1.
+    boolean bool2.
+    integer z.
+
+    bool1 = TRUE.
+    bool2 = FALSE.
+
+    z = -bool2.
+    bool1++.
+    z = bool1 + x.
+    x = y - bool2.
+    y = bool1 * funcCallErrors().
+    bool2--.
+    bool1 = sampleFunc / bool2.
+    x = sampleStruct + z.
+
+    x = (TRUE + 3) * y.
+]
+
+boolean badRelations[integer x, integer y, boolean b][
+    while(b & x){
+        if(x > TRUE){
+            x++.
+        }
+        else{
+            if(FALSE < 3){
+                x--.
+            }
+        }
+    }
+
+    if(sampleStruct >= b){
+        if(x <= b){
+            disp <- "error".
+        }
+        if(TRUE + 3 == x){
+            disp <- "Cascading error".
+        }
+    }
+]
+
+void equalityErrors[][
+    struct sampleStruct s.
+    struct R r.
+    if(sampleVoidFunc() == writeErrors()){
+        return.
+    }
+
+    if(readErrors == writeErrors){
+        return.
+    }
+
+    if(sampleStruct ^= R){
+        if(s == badRelations(5,10,TRUE)){
+            input -> s:var1.
+        }
+        return.
+    }
+
+    if(r == s){
+        return.
+    }
+]
+
+void badAssignments[][
+    struct sampleStruct s.
+    struct R r.
+    writeErrors = sampleVoidFunc.
+    sampleStruct = R.
+    s = r.
+    s:var2 = r.
+    writeErrors = s.
+    s:var2 = badRelations(5,10,TRUE).
+    r:a = equalityErrors().
+]
+
+void f[integer p1, boolean p2] [
+    while(p1){
+        if(p1+1){
+            disp <- "so many errors!".
+        }
+    }
+]
+
+void main[] [
+    integer aaa.
+    struct sampleStruct s.
+
+    # some errors involving illegal operations on functions
+    aaa = f + f.
+    bbb = f == 3.
+    bbb = f > main.
+    bbb = f == f.
+
+    # some errors involving bad function calls 
+    aaa().
+    f().
+    f(5).
+    f(aaa, aaa).
+    f(q, q:a).
+    R().
+
+    # some errors involving structs 
+    q = 5.
+    q = q.
+    input -> R.
+    q = TRUE | 3.
+    bbb = R & q:a.
+    bbb = TRUE & ^5 | s:var2.
+
+    # error involving return
+    return 10.
+
+    # other type errors 
+    aaa = aaa + (^FALSE).
+    aaa = aaa + "foo".
+    bbb = aaa.
+
+    # don't give too many or too few error messages here 
+    bbb = (aaa + TRUE) & (bbb < TRUE).
+]

@@ -75,11 +75,16 @@ integer doMath[integer x] [
     else {
         b{integer}++.
     }
+    input -> (str{intStruct}):int1{integer}.
     (str{intStruct}):int1{integer} = (a{integer} * (-b{integer})).
     (str{intStruct}):int2{integer} = ((str{intStruct}):int1{integer} / x{integer}).
     (str{intStruct}):int3{integer} = ((str{intStruct}):int1{integer} - (str{intStruct}):int2{integer}).
     performRelational{integer,integer,integer->void}((str{intStruct}):int1{integer}, (str{intStruct}):int2{integer}, (str{intStruct}):int3{integer}).
     return b{integer}.
+]
+
+integer simpleFunc[] [
+    return 5.
 ]
 
 void setVars[] [
@@ -88,6 +93,9 @@ void setVars[] [
     struct S3 x3.
     integer y.
     bool{boolean} = TRUE.
+    if ((simpleFunc{->integer}() == doMath{integer->integer}(10))) {
+        bool{boolean} = (^bool{boolean}).
+    }
     (x1{S1}):field1{integer} = 7.
     (x1{S1}):bField{boolean} = bool{boolean}.
     ((x2{S2}):field2{S1}):field1{integer} = (((x1{S1}):field1{integer} - 5) * 10).

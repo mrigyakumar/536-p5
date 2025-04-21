@@ -73,12 +73,16 @@ integer doMath[integer x][
     else{
         b++.
     }
-
+    input -> str:int1.
     str : int1 = a * -b.
     str : int2 = str : int1 / x.
     str : int3 = str:int1 - str:int2.
     performRelational(str:int1, str:int2, str:int3).
     return b.
+]
+
+integer simpleFunc[][
+    return 5.
 ]
 
 void setVars[][
@@ -88,6 +92,10 @@ void setVars[][
   integer y.
 
   bool = TRUE.
+
+  if(simpleFunc() == doMath(10)){
+    bool = ^bool.
+  }
 
   x1 : field1 = 7.
   x1 : bField = bool.

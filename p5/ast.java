@@ -1239,9 +1239,9 @@ class ReturnStmtNode extends StmtNode {
                             "Return value in void function");
             }
 
-            if(!retType.isErrorType() && !type.isErrorType() && !retType.equals(type)){
+            else if(!retType.isErrorType() && !type.isErrorType() && !retType.equals(type)){
                 ErrMsg.fatal(myExp.lineNum(), myExp.charNum(),
-                            "Bad return value");
+                            "Bad return value type");
             }
         }
         else{
@@ -1899,13 +1899,13 @@ abstract class ArithmeticNode extends BinaryExpNode{
 
         if(!typeExp1.isErrorType() && !typeExp1.isIntegerType()){
             ErrMsg.fatal(myExp1.lineNum(), myExp1.charNum(),
-            "Arithemetic operator with non-integer operand");
+            "Arithmetic operator with non-integer operand");
             retType = new ErrorType();
         }
 
         if(!typeExp2.isErrorType() && !typeExp2.isIntegerType()){
             ErrMsg.fatal(myExp2.lineNum(), myExp2.charNum(),
-            "Arithemetic operator with non-integer operand");
+            "Arithmetic operator with non-integer operand");
             retType = new ErrorType();
         }
 
